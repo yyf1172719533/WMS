@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>缓存管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="/resources/favicon.ico">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="/resources/css/public.css" media="all" />
+</head>
+<body class="childrenBody">
+
+<!-- 数据表格开始 -->
+<div>
+    <table class="layui-hide" id="cacheManagerTable" lay-filter="cacheManagerTable"></table>
+    <div id="cacheManagerToolBar" style="display: none;">
+        <button type="button" lay-event="syncData" class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-delete"></span>同步缓存</button>
+        <button type="button" lay-event="removeAll" class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-delete"></span>清空缓存</button>
+    </div>
+    <div id="cacheManagerRowBar" style="display: none;">
+        <button type="button" lay-event="delete" class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
+    </div>
+</div>
+<!-- 数据表格结束 -->
+
+<script type="text/javascript" src="/resources/layui/layui.js"></script>
+<script type="text/javascript">
+    layui.use(['jquery','form','table','layer'],function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+        var layer = layui.layer;
+
+        //渲染表格数据
+        var tableInfos = table.render({
+            elem: '#cacheManagerTable',
+            url: '/cache/loadAllCache',
+            toolbar: '#cacheManagerToolBar',//开启头部工具栏
+            title: '缓存信息',
+            page: true,
+            cols: [ [
+                {field: 'key', title: 'key', align: 'center'},
+                {field: 'value', title: 'value', align: 'center'},
+                {field: 'right', title: '操作', align: 'center', toolbar: '#cacheManagerRowBar'},
+            ] ]
+        });
+
+        //监听工具栏事件
+        table.on("toolbar(cacheManagerTable)",function (obj) {
+            switch (obj.event) {
+                case 'syncData':
+                    syncData();
+                    break;
+                case 'removeAll':
+                    removeAll();
+                    break;
+            };
+        });
+
+        //监听行工具栏事件
+        table.on("tool(cacheManagerTable)",function (obj) {
+            var data = obj.data;//获取当前行的数据
+            switch (obj.event) {
+                case 'delete':
+                    deleteCache(data);
+                    break;
+            };
+        });
+
+        //清空缓存
+        function removeAll() {
+            layer.confirm('您确定要清空缓存吗?', {icon: 3, title: '提示'}, function (index) {
+                $.post("/cache/removeAll", function (res) {
+                    if (res.code==200) {
+                        tableInfos.reload();
+                    }
+                    layer.msg(res.msg);
+                })
+                layer.close(index);
+            });
+        }
+        
+        //删除单行数据
+        function deleteCache(data) {
+            layer.confirm('您确定要删除此缓存吗?', {icon: 3, title: '提示'}, function (index) {
+                $.post("/cache/removeByKey",{key: data.key}, function (res) {
+                    if (res.code==200) {
+                        tableInfos.reload();
+                    }
+                    layer.msg(res.msg);
+                })
+                layer.close(index);
+            });
+        }
+
+        //同步缓存数据
+        function syncData() {
+            $.post("/cache/syncData", function (res) {
+                if (res.code==200) {
+                    tableInfos.reload();
+                }
+                layer.msg(res.msg);
+            })
+            layer.close(index);
+        }
+    })
+</script>
+</body>
+</html>
