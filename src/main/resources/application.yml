@@ -31,6 +31,15 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  #redis配置
+  redis:
+    host: 192.168.254.129
+    port: 6379
+    jedis:
+      pool:
+        max-idle: 20
+        max-active: 100
+        min-idle: 10
 #配置mybatisplus
 mybatis-plus:
   mapper-locations:
@@ -55,6 +64,7 @@ shiro:
   log-out-url: /login/logout*
   authc-ulrs:
   - /**
+
 
 
 #端口号

@@ -9,8 +9,13 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,6 +38,9 @@ public class GoodsAspectCache {
     //声明一个缓存容器
     private Map<String, Object> CACHE_CONTAINER = CachePool.CACHE_CONTAINER;
 
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
     //声明切面表达式
     private static final String POINTCUT_GOODS_ADD = "execution(* com.timain.web.bus.service.impl.GoodsServiceImpl.save(..))";
     private static final String POINTCUT_GOODS_UPDATE = "execution(* com.timain.web.bus.service.impl.GoodsServiceImpl.updateById(..))";
@@ -43,6 +51,12 @@ public class GoodsAspectCache {
     //前缀
     private static final String CACHE_GOODS_PROFIX = "goods:";
 
+    //初始化序列化方式
+    public void initSerizler() {
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    }
+
     /**
      * 添加切入
      * @param joinPoint
@@ -51,11 +65,14 @@ public class GoodsAspectCache {
      */
     @Around(value = POINTCUT_GOODS_ADD)
     public Object cacheGoodsAdd(ProceedingJoinPoint joinPoint) throws Throwable {
+        initSerizler();
+        ValueOperations<String, Object> opsForValue = redisTemplate.opsForValue();
         //取出第一个参数
         Goods object = (Goods) joinPoint.getArgs()[0];
         Boolean res = (Boolean) joinPoint.proceed();
         if (res) {
-            CACHE_CONTAINER.put(CACHE_GOODS_PROFIX + object.getId(), object);
+            //CACHE_CONTAINER.put(CACHE_GOODS_PROFIX + object.getId(), object);
+            opsForValue.set(CACHE_GOODS_PROFIX + object.getId(), object);
         }
         return res;
     }
@@ -68,16 +85,20 @@ public class GoodsAspectCache {
      */
     @Around(value = POINTCUT_GOODS_GET)
     public Object cacheGoodsGet(ProceedingJoinPoint joinPoint) throws Throwable {
+        initSerizler();
+        ValueOperations<String, Object> opsForValue = redisTemplate.opsForValue();
         //取出第一个参数
         Integer object = (Integer) joinPoint.getArgs()[0];
         //从缓存里取
-        Object res1 = CACHE_CONTAINER.get(CACHE_GOODS_PROFIX + object);
+        //Object res1 = CACHE_CONTAINER.get(CACHE_GOODS_PROFIX + object);
+        Object res1 = opsForValue.get(CACHE_GOODS_PROFIX + object);
         if (null!=res1) {
             log.info("已从缓存中找到商品对象" + CACHE_GOODS_PROFIX + object);
             return res1;
         }
         Goods res2 = (Goods) joinPoint.proceed();
-        CACHE_CONTAINER.put(CACHE_GOODS_PROFIX+res2.getId(), res2);
+        //CACHE_CONTAINER.put(CACHE_GOODS_PROFIX+res2.getId(), res2);
+        opsForValue.set(CACHE_GOODS_PROFIX+res2.getId(), res2);
         log.info("未从缓存里面找到商品对象，去数据库查询并放到缓存"+CACHE_GOODS_PROFIX+res2.getId());
         return res2;
     }
@@ -90,16 +111,20 @@ public class GoodsAspectCache {
      */
     @Around(value = POINTCUT_GOODS_UPDATE)
     public Object cacheGoodsUpdate(ProceedingJoinPoint joinPoint) throws Throwable {
+        initSerizler();
+        ValueOperations<String, Object> opsForValue = redisTemplate.opsForValue();
         //取出第一个参数
         Goods goodsVO = (Goods) joinPoint.getArgs()[0];
         Boolean isSuccess = (Boolean) joinPoint.proceed();
         if (isSuccess) {
-            Goods goods = (Goods) CACHE_CONTAINER.get(CACHE_GOODS_PROFIX + goodsVO.getId());
+            //Goods goods = (Goods) CACHE_CONTAINER.get(CACHE_GOODS_PROFIX + goodsVO.getId());
+            Goods goods = (Goods) opsForValue.get(CACHE_GOODS_PROFIX + goodsVO.getId());
             if (null==goods) {
                 goods = new Goods();
                 BeanUtils.copyProperties(goodsVO, goods);
                 log.info("商品对象缓存已更新" + CACHE_GOODS_PROFIX + goodsVO.getId());
-                CACHE_CONTAINER.put(CACHE_GOODS_PROFIX+goods.getId(), goods);
+                //CACHE_CONTAINER.put(CACHE_GOODS_PROFIX+goods.getId(), goods);
+                opsForValue.set(CACHE_GOODS_PROFIX+goods.getId(), goods);
             }
         }
         return isSuccess;
@@ -113,12 +138,14 @@ public class GoodsAspectCache {
      */
     @Around(value = POINTCUT_GOODS_DELETE)
     public Object cacheGoodsDelete(ProceedingJoinPoint joinPoint) throws Throwable {
+        initSerizler();
         //取出第一个参数
         Integer id = (Integer) joinPoint.getArgs()[0];
         Boolean proceed = (Boolean) joinPoint.proceed();
         if (proceed) {
             //删除缓存
-            CACHE_CONTAINER.remove(CACHE_GOODS_PROFIX + id);
+            //CACHE_CONTAINER.remove(CACHE_GOODS_PROFIX + id);
+            redisTemplate.delete(CACHE_GOODS_PROFIX + id);
             log.info("商品对象缓存已删除" + CACHE_GOODS_PROFIX + id);
         }
         return proceed;
