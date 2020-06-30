@@ -184,4 +184,13 @@ public class SysController {
     public String toChangePwd() {
         return "sys/user/changePwd";
     }
+
+    /**
+     * 跳转到请假单管理页面
+     * @return
+     */
+    @RequestMapping("toLeaveManager")
+    public String toLeaveManager() {
+        return "sys/leave/leaveManager";    
+    }
 }
