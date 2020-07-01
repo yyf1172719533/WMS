@@ -13,4 +13,6 @@ import com.timain.web.sys.vo.LeaveBillVO;
 public interface LeaveBillService extends IService<LeaveBill> {
     
     DataGridView findLeaveInfo(LeaveBillVO leaveBillVO);
+    
+    void addOrUpdateLeave(LeaveBillVO leaveBillVO);
 }

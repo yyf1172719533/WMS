@@ -65,9 +65,19 @@
         <button type="button" lay-event="addLeave" class="layui-btn layui-btn-sm"><span class="layui-icon layui-icon-add-1"></span>添加</button>
     </div>
     <div id="leaveInfoRowBar" style="display: none;">
+        {{# if(d.state=='0'){ }}
+        <button type="button" lay-event="submit"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>提交申请</button>
         <button type="button" lay-event="update"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>修改</button>
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>查看</button>
+        {{# }else if(d.state=='1'){ }}
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        {{# }else if(d.state=='2'){ }}
+        <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        {{# }else if(d.state=='3'){ }}
+        <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        {{# } }}
     </div>
 </div>
 <!-- 数据表格结束 -->
@@ -76,16 +86,30 @@
 <div style="display: none;padding: 5px;" id="addOrUpdate">
     <form action="" method="post" class="layui-form layui-form-pane" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
-            <label class="layui-form-label">公告标题</label>
+            <label class="layui-form-label">请假标题</label>
             <div class="layui-input-block">
                 <input type="hidden" name="id"/>
-                <input type="text" name="title" required="required" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                <input type="text" name="title" required="required" lay-verify="required" autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">公告内容</label>
+            <div class="layui-inline">
+                <label class="layui-form-label">请假天数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="days" lay-verify="required" placeholder="请输入请假天数" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">开始时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="leaveTime" id="leaveTime" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">请假内容</label>
             <div class="layui-input-block">
-                <textarea class="fsLayedit" name="content" required="required" id="content" placeholder="请输入内容"></textarea>
+                <textarea class="layui-textarea" name="content" required="required" id="content" placeholder="请输入内容"></textarea>
             </div>
         </div>
         <div class="layui-form-item">
@@ -98,27 +122,14 @@
 </div>
 <!-- 添加和修改的弹出层结束 -->
 
-<!-- 查看弹出层开始 -->
-<div style="display: none;padding: 5px;" id="showInfo">
-    <h2 id="show_title" align="center"></h2>
-    <div style="text-align: right;">
-        发布人：<span id="show_operName"></span>
-        发布时间：<span id="show_createTime"></span>
-    </div>
-    <hr/>
-    <div id="show_content"></div>
-</div>
-<!-- 查看弹出层结束 -->
-
 <script type="text/javascript" src="/resources/layui/layui.js"></script>
 <script type="text/javascript">
-    layui.use(['jquery','form','table','layer','laydate','layedit'],function () {
+    layui.use(['jquery','form','table','layer','laydate'],function () {
         var $ = layui.jquery;
         var form = layui.form;
         var table = layui.table;
         var layer = layui.layer;
         var laydate = layui.laydate;
-        var layedit = layui.layedit;
         //初始化时间选择器
         laydate.render({
             elem: '#startTime',
@@ -126,6 +137,10 @@
         });
         laydate.render({
             elem: '#endTime',
+            type: 'datetime'
+        });
+        laydate.render({
+            elem: '#leaveTime',
             type: 'datetime'
         });
 
@@ -139,14 +154,22 @@
             page: true,
             cols: [ [
                 {type: 'checkbox', fixed: 'left'},
-                {field: 'id', title: '请假单ID', align: 'center', width: '100'},
+                {field: 'id', title: '请假单ID', align: 'center', width: '200'},
                 {field: 'title', title: '请假标题', align: 'center', width: '200'},
                 {field: 'content', title: '请假内容', align: 'center', width: '200'},
                 {field: 'days', title: '请假天数', align: 'center', width: '100'},
                 {field: 'leaveTime', title: '请假时间', align: 'center', width: '200'},
                 {field: 'userName', title: '请假人', align: 'center', width: '200'},
                 {field: 'state', title: '状态', align: 'center', width: '200', templet:function (d) {
-                        
+                        if(d.state=='0') {
+                            return '<font color="#dc143c">' + "未提交" + '</font>';
+                        } else if (d.state=='1') {
+                            return '<font color="#ff8c00">' + "审批中" + '</font>';
+                        } else if (d.state=='2') {
+                            return '<font color="#ff7f50">' + "审批完成" + '</font>';
+                        } else if (d.state=='3') {
+                            return '<font color="#ffd700 ">' + "已放弃" + '</font>';
+                        }
                     } },
                 {field: 'right', title: '操作', align: 'center', toolbar: '#leaveInfoRowBar', width: '400'},
             ] ]
@@ -188,38 +211,10 @@
             };
         });
 
-        //批量删除
-        function batchDelete() {
-            var checkStatus = table.checkStatus('leaveInfoTable');//得到选中行
-            var dataLength = checkStatus.data.length;
-            if (dataLength > 0) {
-                layer.confirm('您确定要删除选中数据吗?', {icon: 3, title: '提示'}, function (index) {
-                    var data = checkStatus.data;//获取选中行的数据
-                    var ids = "";
-                    $.each(data, function (index,item) {
-                        if (index==0) {
-                            ids += "ids=" + item.id;
-                        } else {
-                            ids += "&ids=" + item.id;
-                        }
-                    })
-                    $.post("/notice/delMoreNotice", ids, function (res) {
-                        if (res.code==200) {
-                            tableInfos.reload();
-                        }
-                        layer.msg(res.msg);
-                    })
-                    layer.close(index);
-                });
-            } else {
-                layer.msg("请选中操作行");
-            }
-        }
-
         //删除单行数据
         function deleteInfo(data) {
-            layer.confirm('您确定要删除此数据吗?', {icon: 3, title: '提示'}, function (index) {
-                $.post("/notice/delOneNotice",{id: data.id}, function (res) {
+            layer.confirm('您确定要删除此条请假单吗?', {icon: 3, title: '提示'}, function (index) {
+                $.post("/leave/delOneLeave",{id: data.id}, function (res) {
                     if (res.code==200) {
                         tableInfos.reload();
                     }
@@ -228,77 +223,51 @@
                 layer.close(index);
             });
         }
-
-        //初始化富文本编辑器
-        var editIndex = layedit.build('content');
+        
         var mainIndex;
         var url;
-        //打开添加公告的弹出层
+        //打开添加请假单的弹出层
         function openAddLayer() {
             mainIndex = layer.open({
                 type: 1,
-                title: '发布公告',
+                title: '添加请假单',
                 content: $('#addOrUpdate'),
-                area: ['800px','600px'],
+                area: ['700px','400px'],
                 success:function () {
                     $('#dataFrm')[0].reset();
-                    layedit.setContent(editIndex,"");
-                    url="/notice/addNotice";
+                    url="/leave/addLeave";
                 }
             });
         }
 
-        //打开修改公告的弹出层
+        //打开修改请假单的弹出层
         function openUpdateInfoLayer(data) {
             mainIndex = layer.open({
                 type: 1,
-                title: '修改公告',
+                title: '修改请假单',
                 content: $('#addOrUpdate'),
-                area: ['800px','600px'],
+                area: ['700px','400px'],
                 success:function () {
                     $('#dataFrm')[0].reset();
                     //装载新的数据
                     form.val("dataFrm",data);
-                    layedit.setContent(editIndex,data.content);
-                    url="/notice/updateNotice";
+                    url="/leave/updateLeave";
                 }
             });
         }
 
         //监听提交按钮
         $("#doSubmit").click(function () {
-            //同步编辑器内容到textarea
-            layedit.sync(editIndex);
             var data = $('#dataFrm').serialize();
             alert(data);
-            if (data==null) {
-                alert("公告标题和内容不能为空！");
-            } else {
-                $.post(url,data,function (res) {
-                    if (res.code==200) {
-                        tableInfos.reload();
-                    }
-                    layer.msg(res.msg);
-                    layer.close(mainIndex);
-                })
-            }
-        });
-
-        //打开查看的弹出层
-        function selectInfo(data) {
-            mainIndex = layer.open({
-                type: 1,
-                title: '查看公告',
-                content: $('#showInfo'),
-                area: ['800px','600px'],
-                success:function () {
-                    $('#show_title').html(data.title);
-                    $('#show_operName').html(data.operName);
-                    $('#show_createTime').html(data.createTime);
-                    $('#show_content').html(data.content);
+            $.post(url,data,function (res) {
+                if (res.code==200) {
+                    tableInfos.reload();
                 }
-            });
-        }
+                layer.msg(res.msg);
+                layer.close(mainIndex);
+            })
+        });
     })
 </script>
 </body>
