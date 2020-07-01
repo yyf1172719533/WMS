@@ -3,7 +3,7 @@
       xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 <head>
     <meta charset="UTF-8">
-    <title>请假单管理</title>
+    <title>流程管理</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
@@ -24,34 +24,17 @@
     <form action="" method="post" id="searchFrm" lay-filter="searchFrm" class="layui-form layui-form-pane">
         <div class="layui-form-item">
             <div class="layui-inline">
-                <label class="layui-form-label">请假标题</label>
+                <label class="layui-form-label">部署名称</label>
                 <div class="layui-input-inline">
                     <input type="text" name="title" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
-                <label class="layui-form-label">请假内容</label>
-                <div class="layui-input-inline">
-                    <input type="text" name="content" autocomplete="off" class="layui-input">
+                <div class="layui-input-block" style="text-align: center;">
+                    <button type="button" class="layui-btn" lay-submit="" lay-filter="doSearch"><span class="layui-icon layui-icon-search"></span>查询</button>
+                    <button type="reset" class="layui-btn layui-btn-warm"><span class="layui-icon layui-icon-refresh-1"></span>重置</button>
+                    
                 </div>
-            </div>
-            <div class="layui-inline">
-                <label class="layui-form-label">开始时间</label>
-                <div class="layui-input-inline">
-                    <input type="tel" name="startTime" id="startTime" readonly="readonly" placeholder="yyyy-MM-dd HH:mm:ss" class="layui-input">
-                </div>
-            </div>
-            <div class="layui-inline">
-                <label class="layui-form-label">结束时间</label>
-                <div class="layui-input-inline">
-                    <input type="tel" name="endTime" id="endTime" readonly="readonly" placeholder="yyyy-MM-dd HH:mm:ss" class="layui-input">
-                </div>
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <div class="layui-input-block" style="text-align: center;">
-                <button type="button" class="layui-btn" lay-submit="" lay-filter="doSearch"><span class="layui-icon layui-icon-search"></span>查询</button>
-                <button type="reset" class="layui-btn layui-btn-warm"><span class="layui-icon layui-icon-refresh-1"></span>重置</button>
             </div>
         </div>
     </form>
@@ -62,7 +45,8 @@
 <div>
     <table class="layui-hide" id="leaveInfoTable" lay-filter="leaveInfoTable"></table>
     <div id="leaveInfoToolBar" style="display: none;">
-        <button type="button" lay-event="addLeave" class="layui-btn layui-btn-sm"><span class="layui-icon layui-icon-add-1"></span>添加</button>
+        <button type="button" lay-event="addProcess" class="layui-btn layui-btn-normal"><span class="layui-icon layui-icon-add-1"></span>添加流程部署</button>
+        <button type="button" lay-event="batchDelete" class="layui-btn layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>批量删除</button>
     </div>
     <div id="leaveInfoRowBar" style="display: none;">
         {{# if(d.state=='0'){ }}
@@ -82,34 +66,21 @@
 </div>
 <!-- 数据表格结束 -->
 
-<!-- 添加和修改的弹出层开始 -->
-<div style="display: none;padding: 5px;" id="addOrUpdate">
+<!-- 添加流程部署的弹出层开始 -->
+<div style="display: none;padding: 5px;" id="addProcess">
     <form action="" method="post" class="layui-form layui-form-pane" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
-            <label class="layui-form-label">请假标题</label>
+            <label class="layui-form-label">部署名称</label>
             <div class="layui-input-block">
-                <input type="hidden" name="id"/>
-                <input type="text" name="title" required="required" lay-verify="required" autocomplete="off" class="layui-input">
+                <input type="text" name="deploymentName" id="deploymentName" required="required" placeholder="请输入流程部署名称" lay-verify="required" autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <div class="layui-inline">
-                <label class="layui-form-label">请假天数</label>
-                <div class="layui-input-inline">
-                    <input type="text" name="days" lay-verify="required" placeholder="请输入请假天数" autocomplete="off" class="layui-input">
-                </div>
-            </div>
-            <div class="layui-inline">
-                <label class="layui-form-label">开始时间</label>
-                <div class="layui-input-inline">
-                    <input type="text" name="leaveTime" id="leaveTime" lay-verify="required" autocomplete="off" class="layui-input">
-                </div>
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">请假内容</label>
+            <label class="layui-form-label">选择文件</label>
             <div class="layui-input-block">
-                <textarea class="layui-textarea" name="content" required="required" id="content" placeholder="请输入内容"></textarea>
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn layui-btn-normal" id="test8">选择文件</button>
+                </div>
             </div>
         </div>
         <div class="layui-form-item">
@@ -120,28 +91,39 @@
         </div>
     </form>
 </div>
-<!-- 添加和修改的弹出层结束 -->
+<!-- 添加流程部署的弹出层结束 -->
 
 <script type="text/javascript" src="/resources/layui/layui.js"></script>
 <script type="text/javascript">
-    layui.use(['jquery','form','table','layer','laydate'],function () {
+    layui.use(['jquery','form','table','layer', 'upload'],function () {
         var $ = layui.jquery;
         var form = layui.form;
         var table = layui.table;
         var layer = layui.layer;
-        var laydate = layui.laydate;
-        //初始化时间选择器
-        laydate.render({
-            elem: '#startTime',
-            type: 'datetime'
-        });
-        laydate.render({
-            elem: '#endTime',
-            type: 'datetime'
-        });
-        laydate.render({
-            elem: '#leaveTime',
-            type: 'datetime'
+        var upload = layui.upload;
+
+        //选完文件后不自动上传
+        upload.render({
+            elem: '#test8'
+            ,url: '/workFlow/addWorkFlow' 
+            ,auto: false
+            ,accept: 'file'
+            ,acceptMime: 'application/zip'
+            ,exts: 'zip'
+            ,field: 'mf'
+            ,data: {
+                deploymentName: function () {
+                    return $('#deploymentName').val();
+                }
+            }
+            ,bindAction: '#doSubmit'
+            ,done: function(res){
+                if (res.code==200) {
+                    tableInfos.reload();
+                }
+                layer.msg(res.msg);
+                layer.close(mainIndex);
+            }
         });
 
         //渲染表格数据
@@ -189,7 +171,7 @@
         //监听工具栏事件
         table.on("toolbar(leaveInfoTable)",function (obj) {
             switch (obj.event) {
-                case 'addLeave':
+                case 'addProcess':
                     openAddLayer();
                 break;
             };
@@ -226,16 +208,15 @@
         
         var mainIndex;
         var url;
-        //打开添加请假单的弹出层
+        //打开添加流程部署的弹出层
         function openAddLayer() {
             mainIndex = layer.open({
                 type: 1,
-                title: '添加请假单',
-                content: $('#addOrUpdate'),
+                title: '添加流程部署',
+                content: $('#addProcess'),
                 area: ['700px','400px'],
                 success:function () {
-                    $('#dataFrm')[0].reset();
-                    url="/leave/addLeave";
+                    url="/workFlow/addWorkFlow";
                 }
             });
         }
@@ -245,7 +226,7 @@
             mainIndex = layer.open({
                 type: 1,
                 title: '修改请假单',
-                content: $('#addOrUpdate'),
+                content: $('#addProcess'),
                 area: ['700px','400px'],
                 success:function () {
                     $('#dataFrm')[0].reset();
@@ -256,9 +237,10 @@
             });
         }
 
-        //监听提交按钮
+        /*//监听提交按钮
         $("#doSubmit").click(function () {
             var data = $('#dataFrm').serialize();
+            alert(data);
             $.post(url,data,function (res) {
                 if (res.code==200) {
                     tableInfos.reload();
@@ -266,7 +248,7 @@
                 layer.msg(res.msg);
                 layer.close(mainIndex);
             })
-        });
+        });*/
     })
 </script>
 </body>

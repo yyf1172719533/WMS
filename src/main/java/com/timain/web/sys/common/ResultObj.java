@@ -32,13 +32,16 @@ public class ResultObj {
     public static final ResultObj DISPATCH_ERROR = new ResultObj(Constants.ERROR, "分配失败");
 
     public static final ResultObj RESERT_PWD_SUCCESS = new ResultObj(Constants.OK, "重置密码成功");
-    public static final ResultObj RESERT_PWD_ERROR = new ResultObj(Constants.OK, "重置密码失败");
+    public static final ResultObj RESERT_PWD_ERROR = new ResultObj(Constants.ERROR, "重置密码失败");
 
     public static final ResultObj BACK_GOODS_SUCCESS = new ResultObj(Constants.OK, "退货成功");
-    public static final ResultObj BACK_GOODS_ERROR = new ResultObj(Constants.OK, "退货失败");
+    public static final ResultObj BACK_GOODS_ERROR = new ResultObj(Constants.ERROR, "退货失败");
 
     public static final ResultObj SYNC_CACHE_SUCCESS = new ResultObj(Constants.OK, "同步缓存成功");
-    public static final ResultObj SYNC_CACHE_ERROR = new ResultObj(Constants.OK, "同步缓存失败");
+    public static final ResultObj SYNC_CACHE_ERROR = new ResultObj(Constants.ERROR, "同步缓存失败");
+
+    public static final ResultObj ADD_PROCESS_SUCCESS = new ResultObj(Constants.OK, "部署成功");
+    public static final ResultObj ADD_PROCESS_ERROR = new ResultObj(Constants.ERROR, "部署失败");
 
     private Integer code;
     private String msg;

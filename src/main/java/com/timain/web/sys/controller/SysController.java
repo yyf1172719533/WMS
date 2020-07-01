@@ -193,4 +193,13 @@ public class SysController {
     public String toLeaveManager() {
         return "sys/leave/leaveManager";    
     }
+
+    /**
+     * 跳转到流程管理页面
+     * @return
+     */
+    @RequestMapping("toWorkFlowManager")
+    public String toWorkFlowManager() {
+        return "sys/workFlow/workFlowManager";
+    }
 }
