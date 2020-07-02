@@ -66,7 +66,7 @@
     </div>
     <div id="leaveInfoRowBar" style="display: none;">
         {{# if(d.state=='0'){ }}
-        <button type="button" lay-event="submit"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>提交申请</button>
+        <button type="button" lay-event="startProcess"  class="layui-btn layui-btn-sm layui-btn"><span class="layui-icon layui-icon-ok"></span>提交申请</button>
         <button type="button" lay-event="update"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>修改</button>
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
         {{# }else if(d.state=='1'){ }}
@@ -84,12 +84,12 @@
 
 <!-- 添加和修改的弹出层开始 -->
 <div style="display: none;padding: 5px;" id="addOrUpdate">
-    <form action="" method="post" class="layui-form layui-form-pane" id="dataFrm" lay-filter="dataFrm">
+    <form action="" method="post" class="layui-form layui-form-pane" id="leaveForm" lay-filter="leaveForm">
         <div class="layui-form-item">
             <label class="layui-form-label">请假标题</label>
             <div class="layui-input-block">
-                <input type="hidden" name="id"/>
-                <input type="text" name="title" required="required" lay-verify="required" autocomplete="off" class="layui-input">
+                <input type="text" name="id" style="display: none"/>
+                <input type="text" name="title" lay-verify="required" autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
@@ -109,12 +109,12 @@
         <div class="layui-form-item">
             <label class="layui-form-label">请假内容</label>
             <div class="layui-input-block">
-                <textarea class="layui-textarea" name="content" required="required" id="content" placeholder="请输入内容"></textarea>
+                <textarea class="layui-textarea" name="content" lay-verify="required" id="content" placeholder="请输入内容"></textarea>
             </div>
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block" style="text-align: center;">
-                <button type="button" class="layui-btn" lay-submit="" id="doSubmit"><span class="layui-icon"></span>提交</button>
+                <button type="button" class="layui-btn" lay-submit="" lay-filter="doSubmit"><span class="layui-icon"></span>提交</button>
                 <button type="reset" class="layui-btn layui-btn-warm"><span class="layui-icon"></span>重置</button>
             </div>
         </div>
@@ -199,6 +199,9 @@
         table.on("tool(leaveInfoTable)",function (obj) {
             var data = obj.data;//获取当前行的数据
             switch (obj.event) {
+                case 'startProcess':
+                    startProcess(data);
+                break;
                 case 'update':
                     openUpdateInfoLayer(data);
                 break;
@@ -234,7 +237,7 @@
                 content: $('#addOrUpdate'),
                 area: ['700px','400px'],
                 success:function () {
-                    $('#dataFrm')[0].reset();
+                    $('#leaveForm')[0].reset();
                     url="/leave/addLeave";
                 }
             });
@@ -248,17 +251,30 @@
                 content: $('#addOrUpdate'),
                 area: ['700px','400px'],
                 success:function () {
-                    $('#dataFrm')[0].reset();
+                    $('#leaveForm')[0].reset();
                     //装载新的数据
-                    form.val("dataFrm",data);
+                    form.val("leaveForm",data);
                     url="/leave/updateLeave";
                 }
             });
         }
 
+        //开启请假流程
+        function startProcess(data) {
+            layer.confirm('您确定要提交【' + data.title + '】请假单吗？', {icon: 3, title: '提示'}, function (index) {
+                $.post('/workFlow/startProcess', {id: data.id}, function (res) {
+                    if (res.code==200) {
+                        tableInfos.reload();
+                    }
+                    layer.msg(res.msg);
+                    layer.close(index);
+                })
+            })
+        }
+
         //监听提交按钮
-        $("#doSubmit").click(function () {
-            var data = $('#dataFrm').serialize();
+        form.on('submit(doSubmit)', function () {
+            var data = $('#leaveForm').serialize();
             $.post(url,data,function (res) {
                 if (res.code==200) {
                     tableInfos.reload();
@@ -266,7 +282,7 @@
                 layer.msg(res.msg);
                 layer.close(mainIndex);
             })
-        });
+        })
     })
 </script>
 </body>

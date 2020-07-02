@@ -43,6 +43,9 @@ public class ResultObj {
     public static final ResultObj ADD_PROCESS_SUCCESS = new ResultObj(Constants.OK, "部署成功");
     public static final ResultObj ADD_PROCESS_ERROR = new ResultObj(Constants.ERROR, "部署失败");
 
+    public static final ResultObj SUBMIT_SUCCESS = new ResultObj(Constants.OK, "提交成功");
+    public static final ResultObj SUBMIT_ERROR = new ResultObj(Constants.ERROR, "提交失败");
+
     private Integer code;
     private String msg;
 }

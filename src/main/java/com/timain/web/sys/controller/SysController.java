@@ -1,6 +1,11 @@
 package com.timain.web.sys.controller;
 
+import com.timain.web.sys.pojo.LeaveBill;
+import com.timain.web.sys.service.WorkFlowService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -12,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("sys")
 public class SysController {
+    
+    @Autowired
+    private WorkFlowService workFlowService;
 
     /**
      * 跳转到登录页面
@@ -201,5 +209,28 @@ public class SysController {
     @RequestMapping("toWorkFlowManager")
     public String toWorkFlowManager() {
         return "sys/workFlow/workFlowManager";
+    }
+
+    /**
+     * 跳转到待办任务页面
+     * @return
+     */
+    @RequestMapping("toTaskManager")
+    public String toTaskManager() {
+        return "sys/task/taskManager";
+    }
+
+    /**
+     * 跳转到办理任务页面
+     * @return
+     */
+    @RequestMapping("doTask")
+    public String doTask(String taskId, Model model) {
+        if (StringUtils.isNotBlank(taskId)) {
+            //根据任务ID查询请假单信息
+            LeaveBill leaveBill = this.workFlowService.queryLeaveBillByTaskId(taskId);
+            model.addAttribute("leaveBill", leaveBill);
+        }
+        return "sys/task/doTask";
     }
 }

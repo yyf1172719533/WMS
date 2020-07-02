@@ -1,14 +1,22 @@
 package com.timain.web.sys.controller;
 
+import com.timain.web.sys.common.DataGridView;
 import com.timain.web.sys.common.ResultObj;
 import com.timain.web.sys.service.WorkFlowService;
 import com.timain.web.sys.vo.WorkFlowVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author yyf
@@ -21,7 +29,13 @@ public class WorkFlowController {
     
     @Autowired
     private WorkFlowService workFlowService;
-    
+
+    /**
+     * 部署流程
+     * @param mf
+     * @param workFlowVO
+     * @return
+     */
     @RequestMapping("addWorkFlow")
     public ResultObj addWorkFlow(MultipartFile mf, WorkFlowVO workFlowVO) {
         try {
@@ -32,4 +46,105 @@ public class WorkFlowController {
             return ResultObj.ADD_PROCESS_ERROR;
         }
     }
+
+    /**
+     * 查询流程部署信息
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("loadAllDeployment")
+    public DataGridView loadAllDeployment(WorkFlowVO workFlowVO) {
+        return this.workFlowService.queryAllDeployInfo(workFlowVO);
+    }
+
+    /**
+     * 查询流程定义信息
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("loadAllProcessDefinition")
+    public DataGridView loadAllProcessDefinition(WorkFlowVO workFlowVO) {
+        return this.workFlowService.queryAllProcessDefinition(workFlowVO);
+    }
+
+    /**
+     * 批量删除
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("batchDelete")
+    public ResultObj batchDelete(WorkFlowVO workFlowVO) {
+        try {
+            String[] ids = workFlowVO.getIds();
+            if (null!=ids && ids.length > 0) {
+                for (String deploymentId : ids) {
+                    this.workFlowService.deleteWorkFlow(deploymentId);
+                }
+            }
+            return ResultObj.DELETE_SUCCESS;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultObj.DELETE_ERROR;
+        }
+    }
+
+    /**
+     * 根据流程部署ID删除单个流程部署信息
+     * @param id
+     * @return
+     */
+    @RequestMapping("deleteOne")
+    public ResultObj deleteOne(String id) {
+        try {
+            this.workFlowService.deleteWorkFlow(id);
+            return ResultObj.DELETE_SUCCESS;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultObj.DELETE_ERROR;
+        }
+    }
+    
+    @RequestMapping("viewProcessImg")
+    public void viewProcessImg(String deploymentId, HttpServletResponse response) {
+        InputStream inputStream = this.workFlowService.queryProcessImg(deploymentId);
+        try {
+            BufferedImage image = ImageIO.read(inputStream);
+            ServletOutputStream outputStream = response.getOutputStream();
+            ImageIO.write(image, "JPEG", outputStream);
+            inputStream.close();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 提交请假申请
+     * @param id
+     * @return
+     */
+    @RequestMapping("startProcess")
+    public ResultObj startProcess(String id) {
+        if (StringUtils.isNotBlank(id)) {
+            try {
+                this.workFlowService.submitLeave(id);
+                return ResultObj.SUBMIT_SUCCESS;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResultObj.SUBMIT_ERROR;
+            }
+        }
+        return ResultObj.SUBMIT_ERROR;
+    }
+
+    /**
+     * 查询当前登录人的待办任务
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("loadCurrentUserTask")
+    public DataGridView loadCurrentUserTask(WorkFlowVO workFlowVO) {
+        return this.workFlowService.queryCurrentUserTask(workFlowVO);
+    }
+    
 }

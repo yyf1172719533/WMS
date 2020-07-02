@@ -26,7 +26,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">部署名称</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="title" autocomplete="off" class="layui-input">
+                    <input type="text" name="deploymentName" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
@@ -43,25 +43,15 @@
 
 <!-- 数据表格开始 -->
 <div>
-    <table class="layui-hide" id="leaveInfoTable" lay-filter="leaveInfoTable"></table>
-    <div id="leaveInfoToolBar" style="display: none;">
+    <table class="layui-hide" id="deploymentInfoTable" lay-filter="deploymentInfoTable"></table>
+    <table class="layui-hide" id="processDefinitionTable" lay-filter="processDefinitionTable"></table>
+    <div id="deploymentInfoToolBar" style="display: none;">
         <button type="button" lay-event="addProcess" class="layui-btn layui-btn-normal"><span class="layui-icon layui-icon-add-1"></span>添加流程部署</button>
         <button type="button" lay-event="batchDelete" class="layui-btn layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>批量删除</button>
     </div>
-    <div id="leaveInfoRowBar" style="display: none;">
-        {{# if(d.state=='0'){ }}
-        <button type="button" lay-event="submit"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>提交申请</button>
-        <button type="button" lay-event="update"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>修改</button>
+    <div id="deploymentInfoRowBar" style="display: none;">
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        {{# }else if(d.state=='1'){ }}
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
-        {{# }else if(d.state=='2'){ }}
-        <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
-        {{# }else if(d.state=='3'){ }}
-        <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
-        {{# } }}
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>查看流程图</button>
     </div>
 </div>
 <!-- 数据表格结束 -->
@@ -120,6 +110,7 @@
             ,done: function(res){
                 if (res.code==200) {
                     tableInfos.reload();
+                    processTableInfos.reload();
                 }
                 layer.msg(res.msg);
                 layer.close(mainIndex);
@@ -128,34 +119,37 @@
 
         //渲染表格数据
         var tableInfos = table.render({
-            elem: '#leaveInfoTable',
-            url: '/leave/loadAllLeave',
-            toolbar: '#leaveInfoToolBar',//开启头部工具栏
-            title: '请假单信息',
-            height: 'full-200',
+            elem: '#deploymentInfoTable',
+            url: '/workFlow/loadAllDeployment',
+            toolbar: '#deploymentInfoToolBar',//开启头部工具栏
+            title: '流程部署信息',
+            height: 'full-300',
             page: true,
             cols: [ [
                 {type: 'checkbox', fixed: 'left'},
-                {field: 'id', title: '请假单ID', align: 'center', width: '200'},
-                {field: 'title', title: '请假标题', align: 'center', width: '200'},
-                {field: 'content', title: '请假内容', align: 'center', width: '200'},
-                {field: 'days', title: '请假天数', align: 'center', width: '100'},
-                {field: 'leaveTime', title: '请假时间', align: 'center', width: '200'},
-                {field: 'userName', title: '请假人', align: 'center', width: '200'},
-                {field: 'state', title: '状态', align: 'center', width: '200', templet:function (d) {
-                        if(d.state=='0') {
-                            return '<font color="#dc143c">' + "未提交" + '</font>';
-                        } else if (d.state=='1') {
-                            return '<font color="#ff8c00">' + "审批中" + '</font>';
-                        } else if (d.state=='2') {
-                            return '<font color="#ff7f50">' + "审批完成" + '</font>';
-                        } else if (d.state=='3') {
-                            return '<font color="#ffd700 ">' + "已放弃" + '</font>';
-                        }
-                    } },
-                {field: 'right', title: '操作', align: 'center', toolbar: '#leaveInfoRowBar', width: '400'},
+                {field: 'id', title: '部署ID', align: 'center'},
+                {field: 'name', title: '部署名称', align: 'center'},
+                {field: 'deploymentTime', title: '部署时间', align: 'center'},
+                {field: 'right', title: '操作', align: 'center', toolbar: '#deploymentInfoRowBar'},
             ] ]
         });
+        
+        var processTableInfos = table.render({
+            elem: '#processDefinitionTable',
+            url: '/workFlow/loadAllProcessDefinition',
+            title: '流程定义信息',
+            height: 'full-300',
+            page: true,
+            cols: [ [
+                {field: 'id', title: '流程定义ID', align: 'center'},
+                {field: 'name', title: '流程定义名称', align: 'center'},
+                {field: 'key', title: '流程定义KEY', align: 'center'},
+                {field: 'version', title: '流程定义版本', align: 'center'},
+                {field: 'deploymentId', title: '部署ID', align: 'center'},
+                {field: 'resourceName', title: '资源文件名[bpmn]', align: 'center'},
+                {field: 'diagramResourceName', title: '资源文件名[png]', align: 'center'},
+            ] ]
+        })
 
         //模糊查询
         form.on("submit(doSearch)",function (data) {
@@ -165,45 +159,80 @@
                     curr: 1
                 }
             });
+            processTableInfos.reload({
+                where: data.field,
+                page: {
+                    curr: 1
+                }
+            });
             return false;
         });
 
         //监听工具栏事件
-        table.on("toolbar(leaveInfoTable)",function (obj) {
+        table.on("toolbar(deploymentInfoTable)",function (obj) {
             switch (obj.event) {
                 case 'addProcess':
                     openAddLayer();
+                case 'batchDelete':
+                    batchDelete();
                 break;
             };
         });
 
         //监听行工具栏事件
-        table.on("tool(leaveInfoTable)",function (obj) {
+        table.on("tool(deploymentInfoTable)",function (obj) {
             var data = obj.data;//获取当前行的数据
             switch (obj.event) {
-                case 'update':
-                    openUpdateInfoLayer(data);
-                break;
                 case 'delete':
                     deleteInfo(data);
                 break;
                 case 'select':
-                    selectInfo(data);
+                    selectProcessImg(data);
                 break;
             };
         });
 
         //删除单行数据
         function deleteInfo(data) {
-            layer.confirm('您确定要删除此条请假单吗?', {icon: 3, title: '提示'}, function (index) {
-                $.post("/leave/delOneLeave",{id: data.id}, function (res) {
+            layer.confirm('您确定要删除此条流程部署信息吗?', {icon: 3, title: '提示'}, function (index) {
+                $.post("/workFlow/deleteOne",{id: data.id}, function (res) {
                     if (res.code==200) {
                         tableInfos.reload();
+                        processTableInfos.reload();
                     }
                     layer.msg(res.msg);
                 })
                 layer.close(index);
             });
+        }
+        
+        //批量删除
+        function batchDelete() {
+            var checkStatus = table.checkStatus('deploymentInfoTable');
+            var dataLength = checkStatus.data.length;
+            if (dataLength > 0) {
+                layer.confirm('您确定要删除选中数据吗?', {icon: 3, title: '提示'}, function (index) {
+                    var data = checkStatus.data;//获取选中行的数据
+                    var ids = "";
+                    $.each(data, function (index, item) {
+                        if (index==0) {
+                            ids += "ids=" + item.id;
+                        } else {
+                            ids += "&ids=" + item.id;
+                        }
+                    });
+                    $.post('workFlow/batchDelete', ids, function (res) {
+                        if (res.code==200) {
+                            tableInfos.reload();
+                            processTableInfos.reload();
+                        }
+                        layer.msg(res.msg);
+                    })
+                    layer.close(index);
+                })
+            } else {
+                layer.msg("请选中操作行!");
+            }
         }
         
         var mainIndex;
@@ -221,34 +250,16 @@
             });
         }
 
-        //打开修改请假单的弹出层
-        function openUpdateInfoLayer(data) {
-            mainIndex = layer.open({
-                type: 1,
-                title: '修改请假单',
-                content: $('#addProcess'),
-                area: ['700px','400px'],
-                success:function () {
-                    $('#dataFrm')[0].reset();
-                    //装载新的数据
-                    form.val("dataFrm",data);
-                    url="/leave/updateLeave";
-                }
-            });
-        }
-
-        /*//监听提交按钮
-        $("#doSubmit").click(function () {
-            var data = $('#dataFrm').serialize();
-            alert(data);
-            $.post(url,data,function (res) {
-                if (res.code==200) {
-                    tableInfos.reload();
-                }
-                layer.msg(res.msg);
-                layer.close(mainIndex);
+        //打开查看流程图的弹出层
+        function selectProcessImg(data) {
+            layer.open({
+                type: 2,
+                title: '查看【' + data.name + "】流程图" ,
+                content: '/workFlow/viewProcessImg?deploymentId=' + data.id,
+                area: ['400px','500px'],
             })
-        });*/
+            
+        }
     })
 </script>
 </body>

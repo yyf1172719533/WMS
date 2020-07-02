@@ -14,9 +14,12 @@ public class WorkFlowVO {
 
     private static final long serialVersionUID = 1L;
 
+    private String[] ids;
+    
     private Integer page = 1;
     private Integer limit = 10;
     
     private String deploymentName;
+    private String deploymentId;
 
 }
