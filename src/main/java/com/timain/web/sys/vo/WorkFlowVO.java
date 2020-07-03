@@ -19,6 +19,11 @@ public class WorkFlowVO {
     private Integer page = 1;
     private Integer limit = 10;
     
+    private String taskId;
+    private String outcome;
+    private String id;
+    private String comment;
+    
     private String deploymentName;
     private String deploymentId;
 

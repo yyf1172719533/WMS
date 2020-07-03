@@ -103,7 +103,12 @@ public class WorkFlowController {
             return ResultObj.DELETE_ERROR;
         }
     }
-    
+
+    /**
+     * 查看流程图
+     * @param deploymentId
+     * @param response
+     */
     @RequestMapping("viewProcessImg")
     public void viewProcessImg(String deploymentId, HttpServletResponse response) {
         InputStream inputStream = this.workFlowService.queryProcessImg(deploymentId);
@@ -146,5 +151,33 @@ public class WorkFlowController {
     public DataGridView loadCurrentUserTask(WorkFlowVO workFlowVO) {
         return this.workFlowService.queryCurrentUserTask(workFlowVO);
     }
-    
+
+    /**
+     * 根据任务ID查询批注信息
+     * @param taskId
+     * @return
+     */
+    @RequestMapping("loadAllCommentByTaskId")
+    public DataGridView loadAllCommentByTaskId(String taskId) {
+        if (StringUtils.isNotBlank(taskId)) {
+            return this.workFlowService.queryCommentByTaskId(taskId);
+        }
+        throw new RuntimeException("任务ID为空");
+    }
+
+    /**
+     * 完成待办任务
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("doTask")
+    public ResultObj doTask(WorkFlowVO workFlowVO) {
+        try {
+            this.workFlowService.completeTask(workFlowVO);
+            return ResultObj.SUBMIT_SUCCESS;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultObj.SUBMIT_ERROR;
+        }
+    }
 }

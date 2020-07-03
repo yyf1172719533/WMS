@@ -8,6 +8,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 系统控制器
  * @author yyf
@@ -230,7 +233,28 @@ public class SysController {
             //根据任务ID查询请假单信息
             LeaveBill leaveBill = this.workFlowService.queryLeaveBillByTaskId(taskId);
             model.addAttribute("leaveBill", leaveBill);
+            //根据任务ID查询连线信息
+            List<String> listName = this.workFlowService.queryOutComesByTaskId(taskId);
+            model.addAttribute("listName", listName);
+            model.addAttribute("taskId", taskId);
         }
         return "sys/task/doTask";
+    }
+
+    /**
+     * 跳转到查看审批流程图页面
+     * @param taskId
+     * @param model
+     * @return
+     */
+    @RequestMapping("viewProcessByTaskId")
+    public String viewProcessByTaskId(String taskId, Model model) {
+        //根据任务ID获取流程部署ID
+        String deploymentId = this.workFlowService.queryDeploymentIdByTaskId(taskId);
+        //根据任务ID查询节点坐标
+        Map<String, Object> map = this.workFlowService.queryCoordinateByTaskId(taskId);
+        model.addAttribute("deploymentId", deploymentId);
+        model.addAttribute("c", map);
+        return "sys/task/viewProcessImg";
     }
 }

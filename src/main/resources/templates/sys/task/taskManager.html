@@ -84,51 +84,19 @@
                 type: 2,
                 title: '办理任务',
                 content: '/sys/doTask?taskId=' + data.id,
-                area: ['700px','400px'],
-                
+                area: ['700px','700px'],
             });
         }
 
-        //打开修改请假单的弹出层
+        //打开查看流程图的弹出层
         function viewImg(data) {
-            mainIndex = layer.open({
-                type: 1,
-                title: '修改请假单',
-                content: $('#addOrUpdate'),
-                area: ['700px','400px'],
-                success:function () {
-                    $('#leaveForm')[0].reset();
-                    //装载新的数据
-                    form.val("leaveForm",data);
-                    url="/leave/updateLeave";
-                }
-            });
-        }
-
-        //开启请假流程
-        function startProcess(data) {
-            layer.confirm('您确定要提交【' + data.title + '】请假单吗？', {icon: 3, title: '提示'}, function (index) {
-                $.post('/workFlow/startProcess', {id: data.id}, function (res) {
-                    if (res.code==200) {
-                        tableInfos.reload();
-                    }
-                    layer.msg(res.msg);
-                    layer.close(index);
-                })
+            layer.open({
+                type: 2,
+                title: '审批流程进度图', 
+                content: '/sys/viewProcessByTaskId?taskId=' + data.id,
+                area: ['400px','500px'],
             })
         }
-
-        //监听提交按钮
-        form.on('submit(doSubmit)', function () {
-            var data = $('#leaveForm').serialize();
-            $.post(url,data,function (res) {
-                if (res.code==200) {
-                    tableInfos.reload();
-                }
-                layer.msg(res.msg);
-                layer.close(mainIndex);
-            })
-        })
     })
 </script>
 </body>

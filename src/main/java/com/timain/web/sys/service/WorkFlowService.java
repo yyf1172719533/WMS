@@ -6,6 +6,8 @@ import com.timain.web.sys.pojo.LeaveBill;
 import com.timain.web.sys.vo.WorkFlowVO;
 
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author yyf
@@ -67,4 +69,38 @@ public interface WorkFlowService {
      * @return
      */
     LeaveBill queryLeaveBillByTaskId(String taskId);
+
+    /**
+     * 根据任务ID查询连线信息
+     * @param taskId
+     * @return
+     */
+    List<String> queryOutComesByTaskId(String taskId);
+
+    /**
+     * 根据任务ID查询批注信息
+     * @param taskId
+     * @return
+     */
+    DataGridView queryCommentByTaskId(String taskId);
+
+    /**
+     * 完成待办任务
+     * @param workFlowVO
+     */
+    void completeTask(WorkFlowVO workFlowVO);
+
+    /**
+     * 根据任务ID查询流程部署ID
+     * @param taskId
+     * @return
+     */
+    String queryDeploymentIdByTaskId(String taskId);
+
+    /**
+     * 根据任务ID查询节点坐标
+     * @param taskId
+     * @return
+     */
+    Map<String, Object> queryCoordinateByTaskId(String taskId);
 }

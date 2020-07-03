@@ -5,6 +5,7 @@ import com.timain.web.sys.common.DataGridView;
 import com.timain.web.sys.mapper.LeaveBillMapper;
 import com.timain.web.sys.pojo.LeaveBill;
 import com.timain.web.sys.pojo.User;
+import com.timain.web.sys.pojo.act.ActComment;
 import com.timain.web.sys.pojo.act.ActProcessDefinition;
 import com.timain.web.sys.pojo.act.ActReDeployment;
 import com.timain.web.sys.pojo.act.ActRuTask;
@@ -12,9 +13,14 @@ import com.timain.web.sys.service.WorkFlowService;
 import com.timain.web.sys.utils.LoginUtils;
 import com.timain.web.sys.vo.WorkFlowVO;
 import org.activiti.engine.*;
+import org.activiti.engine.impl.identity.Authentication;
+import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.impl.pvm.process.ActivityImpl;
+import org.activiti.engine.task.Comment;
 import org.activiti.engine.task.Task;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -226,5 +232,157 @@ public class WorkFlowServiceImpl implements WorkFlowService {
         String leaveBillId = businessKey.split(":")[1];
         LeaveBill leaveBill = this.leaveBillMapper.selectById(leaveBillId);
         return leaveBill;
+    }
+
+    /**
+     * 根据任务ID查询连线信息
+     *
+     * @param taskId
+     * @return
+     */
+    @Override
+    public List<String> queryOutComesByTaskId(String taskId) {
+        List<String> outNames = new ArrayList<>();
+        ActivityImpl activityImpl = queryActivity(taskId);
+        //从ActivityImpl中获取连线信息
+        List<PvmTransition> outgoingTransitions = activityImpl.getOutgoingTransitions();
+        if (null!=outgoingTransitions && outgoingTransitions.size() > 0) {
+            for (PvmTransition pvmTransition : outgoingTransitions) {
+                String name = pvmTransition.getProperty("name").toString();
+                outNames.add(name);
+            }
+        }
+        return outNames;
+    }
+
+    /**
+     * 根据任务ID获取节点数据
+     * @param taskId
+     * @return
+     */
+    private ActivityImpl queryActivity(String taskId) {
+        //根据任务ID查询任务实例
+        Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+        //获取流程实例ID
+        String processInstanceId = task.getProcessInstanceId();
+        //获取流程定义ID
+        String processDefinitionId = task.getProcessDefinitionId();
+        //根据流程实例ID获取流程实例
+        ProcessInstance processInstance = this.runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        //根据流程定义ID查询流程定义的xml信息
+        ProcessDefinitionEntity processDefinitionEntity = (ProcessDefinitionEntity) this.repositoryService.getProcessDefinition(processDefinitionId);
+        //从流程实例中获取当前活动节点
+        String activityId = processInstance.getActivityId();
+        //根据活动ID获取xml和当前活动ID相关节点数据
+        ActivityImpl activityImpl = processDefinitionEntity.findActivity(activityId);
+        return activityImpl;
+    }
+
+    /**
+     * 根据任务ID查询批注信息
+     *
+     * @param taskId
+     * @return
+     */
+    @Override
+    public DataGridView queryCommentByTaskId(String taskId) {
+        //根据任务ID查询任务实例
+        Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+        //获取流程实例ID
+        String processInstanceId = task.getProcessInstanceId();
+        //获取批注信息
+        List<Comment> comments = taskService.getProcessInstanceComments(processInstanceId);
+        List<ActComment> data = new ArrayList<>();
+        if (null!=comments && comments.size() > 0) {
+            for (Comment comment : comments) {
+                ActComment actComment = new ActComment();
+                BeanUtils.copyProperties(comment, actComment);
+                data.add(actComment);
+            }
+        }
+        return new DataGridView(Long.valueOf(data.size()), data);
+    }
+
+    /**
+     * 完成待办任务
+     *
+     * @param workFlowVO
+     */
+    @Override
+    public void completeTask(WorkFlowVO workFlowVO) {
+        String leaveBillId = workFlowVO.getId();//请假单ID
+        String outcome = workFlowVO.getOutcome();//连接名称
+        String taskId = workFlowVO.getTaskId();//任务ID
+        String comment = workFlowVO.getComment();//批注信息
+        if (StringUtils.isEmpty(leaveBillId) || StringUtils.isEmpty(outcome) || StringUtils.isEmpty(taskId)) {
+            throw new RuntimeException("参数错误!");
+        }
+        //根据任务ID获取任务实例
+        Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+        //获取流程实例ID
+        String processInstanceId = task.getProcessInstanceId();
+        //设置批注人
+        User user = (User) LoginUtils.getSession().getAttribute("user");
+        String userName = user.getName();
+        Authentication.setAuthenticatedUserId(userName);
+        //添加批注信息
+        this.taskService.addComment(taskId, processInstanceId, outcome, "【" + outcome + "】" + comment);
+        //完成任务
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("outcome", outcome);
+        this.taskService.complete(taskId, variables);
+        //判断任务是否结束
+        ProcessInstance processInstance = this.runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        if (null==processInstance) {
+            LeaveBill leaveBill = new LeaveBill();
+            leaveBill.setId(leaveBillId);
+            if ("放弃".equals(outcome)) {
+                leaveBill.setState(Constants.STATE_LEAVEBILL_THREE);
+            } else {
+                leaveBill.setState(Constants.STATE_LEAVEBILL_TWO);
+            }
+            this.leaveBillMapper.updateById(leaveBill);
+        }
+    }
+
+    /**
+     * 根据任务ID查询流程部署ID
+     *
+     * @param taskId
+     * @return
+     */
+    @Override
+    public String queryDeploymentIdByTaskId(String taskId) {
+        //根据任务ID查询任务实例
+        Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+        //获取流程实例ID
+        String processInstanceId = task.getProcessInstanceId();
+        //根据流程实例ID获取流程实例对象
+        ProcessInstance processInstance = this.runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        //获取流程定义ID
+        String processDefinitionId = processInstance.getProcessDefinitionId();
+        //根据流程定义ID查询流程定义对象
+        ProcessDefinition processDefinition = this.repositoryService.createProcessDefinitionQuery().processDefinitionId(processDefinitionId).singleResult();
+        //获取流程部署ID
+        String deploymentId = processDefinition.getDeploymentId();
+        return deploymentId;
+    }
+
+    /**
+     * 根据任务ID查询节点坐标
+     *
+     * @param taskId
+     * @return
+     */
+    @Override
+    public Map<String, Object> queryCoordinateByTaskId(String taskId) {
+        Map<String, Object> map = new HashMap<>();
+        ActivityImpl activityImpl = queryActivity(taskId);
+        //从activityImpl中取出坐标信息
+        map.put("x", activityImpl.getX());
+        map.put("y", activityImpl.getY());
+        map.put("width", activityImpl.getWidth());
+        map.put("height", activityImpl.getHeight());
+        return map;
     }
 }

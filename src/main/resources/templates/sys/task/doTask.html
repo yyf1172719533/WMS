@@ -21,133 +21,92 @@
         <div class="layui-form-item">
             <label class="layui-form-label">请假标题</label>
             <div class="layui-input-block">
-                <input type="text" name="id" style="display: none"/>
-                <input type="text" name="title" lay-verify="required" autocomplete="off" class="layui-input">
+                <input type="text" name="id" style="display: none" th:value="${leaveBill.getId()}"/>
+                <input type="text" name="title" disabled  autocomplete="off" class="layui-input" th:value="${leaveBill.getTitle()}">
             </div>
         </div>
         <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">请假天数</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="days" lay-verify="required" placeholder="请输入请假天数" autocomplete="off" class="layui-input">
+                    <input type="text" name="days" disabled autocomplete="off" class="layui-input" th:value="${leaveBill.getDays()}">
                 </div>
             </div>
             <div class="layui-inline">
                 <label class="layui-form-label">开始时间</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="leaveTime" id="leaveTime" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" name="leaveTime" id="leaveTime" disabled autocomplete="off" class="layui-input" th:value="${#dates.format(leaveBill.getLeaveTime(), 'yyyy-MM-dd HH:mm:ss')}">
                 </div>
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label">请假内容</label>
             <div class="layui-input-block">
-                <textarea class="layui-textarea" name="content" lay-verify="required" id="content" placeholder="请输入内容"></textarea>
+                <textarea class="layui-textarea" name="content" disabled id="content" th:text="${leaveBill.getContent()}"></textarea>
             </div>
         </div>
         <div class="layui-form-item">
-            <div class="layui-input-block" style="text-align: center;">
-                <button type="button" class="layui-btn" lay-submit="" lay-filter="doSubmit"><span class="layui-icon"></span>提交</button>
-                <button type="reset" class="layui-btn layui-btn-warm"><span class="layui-icon"></span>重置</button>
+            <label class="layui-form-label">批注</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" name="comment" id="comment" placeholder="请输入批注信息"></textarea>
             </div>
+        </div>
+        <div class="layui-form-item" style="text-align: center;">
+            <span th:each="outName:${listName}">
+                <input type="button" class="layui-btn doTask" th:value="${outName}">
+            </span>
         </div>
     </form>
 </div>
 
+<!-- 数据表格开始 -->
+<div>
+    <table class="layui-hide" id="commentInfoTable" lay-filter="commentInfoTable"></table>
+</div>
+<!-- 数据表格结束 -->
+
 <script type="text/javascript" src="/resources/layui/layui.js"></script>
-<script type="text/javascript">
+<script type="text/javascript" th:inline="javascript">
     layui.use(['jquery','form','table','layer'],function () {
         var $ = layui.jquery;
         var form = layui.form;
         var table = layui.table;
         var layer = layui.layer;
-
+        
+        var taskId = [[ ${taskId} ]];
+        //var id = [[ ${leaveBill.getId()} ]]
         //渲染表格数据
         var tableInfos = table.render({
-            elem: '#taskInfoTable',
-            url: '/workFlow/loadCurrentUserTask',
-            title: '待办任务',
-            height: 'full-200',
+            elem: '#commentInfoTable',
+            url: '/workFlow/loadAllCommentByTaskId',
+            where: {
+                taskId: taskId
+            },
+            title: '批注信息列表',
+            height: 'full-400',
             page: true,
             cols: [ [
-                {type: 'checkbox', fixed: 'left'},
-                {field: 'id', title: '任务ID', align: 'center'},
-                {field: 'name', title: '待办任务名称', align: 'center'},
-                {field: 'createTime', title: '创建时间', align: 'center'},
-                {field: 'assignee', title: '办理人', align: 'center'},
-                {field: 'right', title: '操作', align: 'center', toolbar: '#taskInfoRowBar'},
+                {field: 'time', title: '批注时间', align: 'center'},
+                {field: 'userId', title: '批注人', align: 'center'},
+                {field: 'message', title: '批注内容', align: 'center'},
             ] ]
         });
-
-        //模糊查询
-        form.on("submit(doSearch)",function () {
-            tableInfos.reload();
-        });
-
-        //监听行工具栏事件
-        table.on("tool(taskInfoTable)",function (obj) {
-            var data = obj.data;//获取当前行的数据
-            switch (obj.event) {
-                case 'doTask':
-                    toDoTask(data);
-                break;
-                case 'viewProcessImg':
-                    viewImg(data);
-                break;
-            };
-        });
         
-        var mainIndex;
-        var url;
-        //打开办理任务的弹出层
-        function toDoTask(data) {
-            mainIndex = layer.open({
-                type: 1,
-                title: '办理任务',
-                content: '/sys/',
-                area: ['700px','400px'],
-                
-            });
-        }
-
-        //打开修改请假单的弹出层
-        function viewImg(data) {
-            mainIndex = layer.open({
-                type: 1,
-                title: '修改请假单',
-                content: $('#addOrUpdate'),
-                area: ['700px','400px'],
-                success:function () {
-                    $('#leaveForm')[0].reset();
-                    //装载新的数据
-                    form.val("leaveForm",data);
-                    url="/leave/updateLeave";
-                }
-            });
-        }
-
-        //开启请假流程
-        function startProcess(data) {
-            layer.confirm('您确定要提交【' + data.title + '】请假单吗？', {icon: 3, title: '提示'}, function (index) {
-                $.post('/workFlow/startProcess', {id: data.id}, function (res) {
-                    if (res.code==200) {
-                        tableInfos.reload();
-                    }
-                    layer.msg(res.msg);
-                    layer.close(index);
-                })
-            })
-        }
-
-        //监听提交按钮
-        form.on('submit(doSubmit)', function () {
-            var data = $('#leaveForm').serialize();
-            $.post(url,data,function (res) {
+        //监听按钮事件
+        $(".doTask").click(function (obj) {
+            var outcome = this.value;
+            $.post('/workFlow/doTask', {
+                taskId: taskId,
+                outcome: outcome,
+                id: [[ ${leaveBill.getId()} ]],
+                comment: $('#comment').val()
+            }, function (res) {
                 if (res.code==200) {
+                    layer.msg(res.msg);
                     tableInfos.reload();
+                    var index = parent.layer.getFrameIndex(window.name);
+                    window.parent.layer.close(index);
                 }
-                layer.msg(res.msg);
-                layer.close(mainIndex);
             })
         })
     })

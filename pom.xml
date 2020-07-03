@@ -118,15 +118,20 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.62</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.activiti</groupId>
             <artifactId>activiti-engine</artifactId>
             <version>7.1.0.M1</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.activiti</groupId>
             <artifactId>activiti-spring</artifactId>
-            <version>7.1.0.M1</version>
+            <version>5.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-engine</artifactId>
+            <version>5.22.0</version>
         </dependency>
 
     </dependencies>
