@@ -1,6 +1,7 @@
 package com.timain.web.sys.controller;
 
 import com.timain.web.sys.pojo.LeaveBill;
+import com.timain.web.sys.service.LeaveBillService;
 import com.timain.web.sys.service.WorkFlowService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class SysController {
     
     @Autowired
     private WorkFlowService workFlowService;
+    @Autowired
+    private LeaveBillService leaveBillService;
 
     /**
      * 跳转到登录页面
@@ -256,5 +259,34 @@ public class SysController {
         model.addAttribute("deploymentId", deploymentId);
         model.addAttribute("c", map);
         return "sys/task/viewProcessImg";
+    }
+
+    /**
+     * 跳转到审批进度查看页面
+     * @return
+     */
+    @RequestMapping("viewProcess")
+    public String viewProcess(String id, Model model) {
+        LeaveBill leaveBill = this.leaveBillService.getById(id);
+        model.addAttribute("leaveBill", leaveBill);
+        return "sys/leave/viewProcess";
+    }
+
+    /**
+     * 跳转到审批记录页面
+     * @return
+     */
+    @RequestMapping("toQueryHistory")
+    public String toQueryHistory() {
+        return "sys/approve/queryHistory";
+    }
+
+    /**
+     * 跳转到历史流程页面
+     * @return
+     */
+    @RequestMapping("toHistoryWorkFlow")
+    public String toHistoryWorkFlow() {
+        return "sys/workFlow/queryHistoryWorkFlow";
     }
 }

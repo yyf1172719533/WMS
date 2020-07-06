@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>审批进度查阅</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="/resources/favicon.ico">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="/resources/css/public.css" media="all" />
+</head>
+<body class="childrenBody">
+<div>
+    <form action="" method="post" class="layui-form layui-form-pane" id="leaveForm" lay-filter="leaveForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">请假标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="id" style="display: none" th:value="${leaveBill.getId()}"/>
+                <input type="text" name="title" disabled  autocomplete="off" class="layui-input" th:value="${leaveBill.getTitle()}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">请假天数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="days" disabled autocomplete="off" class="layui-input" th:value="${leaveBill.getDays()}">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">开始时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="leaveTime" id="leaveTime" disabled autocomplete="off" class="layui-input" th:value="${#dates.format(leaveBill.getLeaveTime(), 'yyyy-MM-dd HH:mm:ss')}">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">请假内容</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" name="content" disabled id="content" th:text="${leaveBill.getContent()}"></textarea>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 数据表格开始 -->
+<div>
+    <table class="layui-hide" id="commentInfoTable" lay-filter="commentInfoTable"></table>
+</div>
+<!-- 数据表格结束 -->
+
+<script type="text/javascript" src="/resources/layui/layui.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    layui.use(['jquery','form','table','layer'],function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+        var layer = layui.layer;
+        
+        var id = [[ ${leaveBill.getId()} ]];
+        //渲染表格数据
+        var tableInfos = table.render({
+            elem: '#commentInfoTable',
+            url: '/workFlow/loadAllCommentByLeaveBillId',
+            where: {
+                id: id
+            },
+            title: '批注信息列表',
+            height: 'full-300',
+            page: true,
+            cols: [ [
+                {field: 'time', title: '批注时间', align: 'center'},
+                {field: 'userId', title: '批注人', align: 'center'},
+                {field: 'message', title: '批注内容', align: 'center'},
+            ] ]
+        });
+    })
+</script>
+</body>
+</html>

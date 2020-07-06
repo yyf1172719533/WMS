@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>历史流程</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="/resources/favicon.ico">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="/resources/css/public.css" media="all" />
+</head>
+<body class="childrenBody">
+
+<div class="layui-form-item">
+    <div class="layui-input-block" style="text-align: right;">
+        <button type="button" class="layui-btn" lay-submit="" lay-filter="doSearch"><span class="layui-icon layui-icon-refresh-1"></span>刷新</button>
+    </div>
+</div>
+
+<!-- 数据表格开始 -->
+<div>
+    <table class="layui-hide" id="historyInfoTable" lay-filter="historyInfoTable"></table>
+</div>
+<!-- 数据表格结束 -->
+
+<script type="text/javascript" src="/resources/layui/layui.js"></script>
+<script type="text/javascript">
+    layui.use(['jquery','form','table','layer'],function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+        var layer = layui.layer;
+
+        //渲染表格数据
+        var tableInfos = table.render({
+            elem: '#historyInfoTable',
+            url: '/workFlow/loadAllWorkFlow',
+            title: '待办任务',
+            height: 'full-200',
+            page: true,
+            cols: [ [
+                {field: 'id', title: 'ID', align: 'center'},
+                {field: 'businessKey', title: '业务KEY', align: 'center'},
+                {field: 'processDefinitionId', title: '流程定义ID', align: 'center'},
+                {field: 'startTime', title: '开始时间', align: 'center'},
+                {field: 'endTime', title: '结束时间', align: 'center'},
+            ] ]
+        });
+
+        //模糊查询
+        form.on("submit(doSearch)",function () {
+            tableInfos.reload();
+        });
+    })
+</script>
+</body>
+</html>

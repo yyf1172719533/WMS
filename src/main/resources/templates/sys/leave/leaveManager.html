@@ -70,13 +70,13 @@
         <button type="button" lay-event="update"  class="layui-btn layui-btn-sm layui-btn-normal"><span class="layui-icon layui-icon-edit"></span>修改</button>
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
         {{# }else if(d.state=='1'){ }}
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批进度查阅</button>
         {{# }else if(d.state=='2'){ }}
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批进度查阅</button>
         {{# }else if(d.state=='3'){ }}
         <button type="button" lay-event="delete"  class="layui-btn layui-btn-sm layui-btn-danger"><span class="layui-icon layui-icon-delete"></span>删除</button>
-        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批查阅</button>
+        <button type="button" lay-event="select"  class="layui-btn layui-btn-sm layui-btn-warm"><span class="layui-icon layui-icon-file"></span>审批进度查阅</button>
         {{# } }}
     </div>
 </div>
@@ -209,7 +209,7 @@
                     deleteInfo(data);
                 break;
                 case 'select':
-                    selectInfo(data);
+                    selectProcessInfo(data);
                 break;
             };
         });
@@ -269,6 +269,16 @@
                     layer.msg(res.msg);
                     layer.close(index);
                 })
+            })
+        }
+        
+        //查看审批进度
+        function selectProcessInfo(data) {
+            mainIndex = layer.open({
+                type: 2,
+                title: '审批进度',
+                area: ['700px','650px'],
+                content: '/sys/viewProcess?id=' + data.id,
             })
         }
 

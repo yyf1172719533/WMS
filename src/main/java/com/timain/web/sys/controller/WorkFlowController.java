@@ -180,4 +180,36 @@ public class WorkFlowController {
             return ResultObj.SUBMIT_ERROR;
         }
     }
+
+    /**
+     * 根据请假单ID查询批注信息
+     * @return
+     */
+    @RequestMapping("loadAllCommentByLeaveBillId")
+    public DataGridView loadAllCommentByLeaveBillId(String id) {
+        if (StringUtils.isNotBlank(id)) {
+            return this.workFlowService.queryCommentByLeaveBillId(id);
+        }
+        throw new RuntimeException("请假单ID为空!");
+    }
+
+    /**
+     * 查询当前登录人的审批记录
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("loadAllHistory")
+    public DataGridView loadAllHistory(WorkFlowVO workFlowVO) {
+        return this.workFlowService.queryCurrentHistory(workFlowVO);
+    }
+
+    /**
+     * 查询所有历史流程
+     * @param workFlowVO
+     * @return
+     */
+    @RequestMapping("loadAllWorkFlow")
+    public DataGridView loadAllWorkFlow(WorkFlowVO workFlowVO) {
+        return this.workFlowService.queryWorkFlow(workFlowVO);
+    }
 }

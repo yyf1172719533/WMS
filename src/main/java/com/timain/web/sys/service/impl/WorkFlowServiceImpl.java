@@ -13,6 +13,8 @@ import com.timain.web.sys.service.WorkFlowService;
 import com.timain.web.sys.utils.LoginUtils;
 import com.timain.web.sys.vo.WorkFlowVO;
 import org.activiti.engine.*;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.impl.identity.Authentication;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.pvm.PvmTransition;
@@ -384,5 +386,61 @@ public class WorkFlowServiceImpl implements WorkFlowService {
         map.put("width", activityImpl.getWidth());
         map.put("height", activityImpl.getHeight());
         return map;
+    }
+
+    /**
+     * 根据请假单ID查询批注信息
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public DataGridView queryCommentByLeaveBillId(String id) {
+        String businessKey = LeaveBill.class.getSimpleName() + ":" + id;
+        //根据businessKey查询历史流程实例
+        HistoricProcessInstance historicProcessInstance = this.historyService.createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
+        //根据流程实例ID查询批注信息
+        List<Comment> comments = this.taskService.getProcessInstanceComments(historicProcessInstance.getId());
+        List<ActComment> list = new ArrayList<>();
+        if (null!=comments && comments.size() > 0) {
+            for (Comment comment : comments) {
+                ActComment actComment = new ActComment();
+                BeanUtils.copyProperties(comment, actComment);
+                list.add(actComment);
+            }
+        }
+        return new DataGridView(Long.valueOf(list.size()), list);
+    }
+
+    /**
+     * 查询当前登录人的审批记录
+     *
+     * @param workFlowVO
+     * @return
+     */
+    @Override
+    public DataGridView queryCurrentHistory(WorkFlowVO workFlowVO) {
+        User user = (User) LoginUtils.getSession().getAttribute("user");
+        String assignee = user.getName();
+        int firstResult = (workFlowVO.getPage() - 1) * workFlowVO.getLimit();
+        int maxResults = workFlowVO.getLimit();
+        long count = this.historyService.createHistoricTaskInstanceQuery().taskAssignee(assignee).count();
+        List<HistoricTaskInstance> historicTaskInstances = this.historyService.createHistoricTaskInstanceQuery().taskAssignee(assignee).listPage(firstResult, maxResults);
+        return new DataGridView(count, historicTaskInstances);
+    }
+
+    /**
+     * 查询所有历史流程
+     *
+     * @param workFlowVO
+     * @return
+     */
+    @Override
+    public DataGridView queryWorkFlow(WorkFlowVO workFlowVO) {
+        int firstResult = (workFlowVO.getPage() - 1) * workFlowVO.getLimit();
+        int maxResults = workFlowVO.getLimit();
+        long count = this.historyService.createHistoricProcessInstanceQuery().count();
+        List<HistoricProcessInstance> historicProcessInstances = this.historyService.createHistoricProcessInstanceQuery().listPage(firstResult, maxResults);
+        return new DataGridView(count, historicProcessInstances);
     }
 }
